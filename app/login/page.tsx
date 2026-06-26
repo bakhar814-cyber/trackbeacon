@@ -65,7 +65,7 @@ export default function Login() {
       ) : (
         <form onSubmit={verify} className="mt-6 space-y-3">
           <p className="text-sm text-slate-600">
-            We emailed a 6-digit code to <strong>{email}</strong>. Enter it below.
+            We emailed a code to <strong>{email}</strong>. Enter it below.
           </p>
           <input
             inputMode="numeric"
@@ -74,7 +74,7 @@ export default function Login() {
             required
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="123456"
+            placeholder="12345678"
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-center text-lg tracking-widest"
           />
           <button
