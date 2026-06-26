@@ -1,0 +1,5 @@
+# One product URL per line. Lines starting with # are ignored.
+# Replace these with real product pages from the sources you'll track.
+# Tip: pick pages that ship schema.org Product JSON-LD (most e-commerce does).
+# https://example-store.com/products/some-item
+# https://example-store.com/products/another-item
