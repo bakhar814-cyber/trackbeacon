@@ -1,5 +1,7 @@
 # TrackBeacon — niche restock & price-drop tracker (MVP starter)
 
+**Live:** https://trackbeacon.vercel.app
+
 A working scaffold of the playbook's Part 3 / Part 4 build: a freemium SaaS that
 watches product pages, alerts users on price drops + restocks, and exposes a
 public, always-current directory (your SEO + GEO engine).
