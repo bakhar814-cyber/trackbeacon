@@ -180,6 +180,22 @@ measured cost. The Anthropic provider defaults to `claude-opus-4-8`, sends
 per-model pricing to the cost ledger, omits sampling params on models that
 reject them, and retries transient 429/5xx with backoff.
 
+### Connect your YouTube channel
+
+1. Google Cloud → enable **YouTube Data API v3**; OAuth consent screen → add scopes
+   `youtube.upload` + `youtube.force-ssl`, then **Publish** the app (a Testing-status
+   app issues refresh tokens that expire after 7 days).
+2. Create an OAuth **Desktop app** client; put the id/secret in `.env`
+   (`YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`).
+3. Mint a refresh token: `npm run youtube:auth` → open the printed URL → sign in as
+   the channel owner → paste the printed `YOUTUBE_REFRESH_TOKEN` into `.env`.
+4. Verify without uploading: `npm run smoke:youtube` → prints your channel title,
+   id, and subscriber count.
+
+The uploader streams `episode.videoUrl` to YouTube, so in live mode use cloud
+storage (`STORAGE_DRIVER=s3`) or an `APP_BASE_URL` the worker can actually reach.
+Uploads are flagged `selfDeclaredMadeForKids` and scheduled across the day.
+
 Full instructions in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Any provider
 without a key transparently falls back to a mock, so a partial live config still
 produces episodes instead of crashing.

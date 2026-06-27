@@ -17,7 +17,9 @@
     "seed": "tsx prisma/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "smoke:llm": "tsx scripts/smoke-llm.ts"
+    "smoke:llm": "tsx scripts/smoke-llm.ts",
+    "youtube:auth": "tsx scripts/youtube-auth.ts",
+    "smoke:youtube": "tsx scripts/smoke-youtube.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
