@@ -36,8 +36,8 @@ function Card({ name, price, features, highlight, cta }: {
       className={
         "card-3d relative rounded-3xl p-6 " +
         (highlight
-          ? "bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white shadow-glow ring-1 ring-white/10"
-          : "glass text-slate-900")
+          ? "bg-gradient-to-br from-indigo-600 via-indigo-700 to-cyan-700 text-white shadow-glow ring-1 ring-white/20"
+          : "glass text-slate-100")
       }
     >
       {highlight && (
@@ -45,12 +45,12 @@ function Card({ name, price, features, highlight, cta }: {
           Most popular
         </span>
       )}
-      <h2 className={"font-semibold " + (highlight ? "text-white/80" : "text-slate-500")}>{name}</h2>
+      <h2 className={"font-semibold " + (highlight ? "text-white/80" : "text-slate-400")}>{name}</h2>
       <p className="mt-2 text-4xl font-extrabold tracking-tight">{price}</p>
-      <ul className={"mt-5 space-y-2.5 text-sm " + (highlight ? "text-slate-200" : "text-slate-600")}>
+      <ul className={"mt-5 space-y-2.5 text-sm " + (highlight ? "text-white/90" : "text-slate-300")}>
         {features.map((f) => (
           <li key={f} className="flex items-center gap-2">
-            <span className={highlight ? "text-cyan-400" : "text-accent"}>✓</span> {f}
+            <span className={highlight ? "text-cyan-200" : "text-indigo-300"}>✓</span> {f}
           </li>
         ))}
       </ul>

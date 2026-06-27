@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html {
@@ -12,59 +12,72 @@ html {
 
 html,
 body {
-  color: #0b1120;
-  background-color: #eef2fb;
-  /* Soft premium depth: layered radial glows behind everything. */
+  color: #e2e8f0;
+  background-color: #05070f;
+  /* Premium dark depth: layered neon glows on a near-black canvas. */
   background-image:
-    radial-gradient(60rem 60rem at 110% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
-    radial-gradient(50rem 50rem at -10% 0%, rgba(59, 130, 246, 0.16), transparent 55%),
-    radial-gradient(40rem 40rem at 50% 120%, rgba(168, 85, 247, 0.12), transparent 60%);
+    radial-gradient(60rem 60rem at 110% -10%, rgba(99, 102, 241, 0.22), transparent 60%),
+    radial-gradient(50rem 50rem at -10% 0%, rgba(14, 165, 233, 0.16), transparent 55%),
+    radial-gradient(45rem 45rem at 50% 120%, rgba(168, 85, 247, 0.18), transparent 60%);
   background-attachment: fixed;
 }
 
+::selection {
+  background: rgba(99, 102, 241, 0.45);
+}
+
+/* slim premium scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
+
 @layer components {
-  /* Frosted glass surface */
+  /* Frosted dark glass surface */
   .glass {
-    @apply border border-white/60 bg-white/70 backdrop-blur-xl;
+    @apply border border-white/10 bg-white/[0.04] backdrop-blur-xl;
   }
 
-  /* Premium 3D card: lifts and tilts slightly on hover */
+  /* Premium 3D card: lifts + glows on hover (JS adds live tilt) */
   .card-3d {
-    @apply transition-all duration-300 ease-out will-change-transform;
+    @apply transition-transform duration-200 ease-out will-change-transform;
     transform: perspective(1000px) translateZ(0);
     box-shadow:
-      0 1px 2px rgba(15, 23, 42, 0.04),
-      0 8px 24px -12px rgba(15, 23, 42, 0.18);
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 12px 30px -16px rgba(0, 0, 0, 0.7);
   }
   .card-3d:hover {
-    transform: perspective(1000px) translateY(-6px) rotateX(2deg);
     box-shadow:
-      0 1px 2px rgba(15, 23, 42, 0.06),
-      0 30px 60px -18px rgba(37, 99, 235, 0.35);
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 30px 60px -18px rgba(79, 70, 229, 0.55);
   }
 
-  /* Gradient text */
+  /* Bright gradient text (tuned for dark bg) */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(120deg, #4f46e5, #2563eb 40%, #06b6d4);
+    background-image: linear-gradient(120deg, #818cf8, #38bdf8 55%, #22d3ee);
   }
 
   /* Glowing gradient button */
   .btn-glow {
     background-image: linear-gradient(120deg, #4f46e5, #2563eb 55%, #0ea5e9);
-    box-shadow: 0 10px 30px -8px rgba(37, 99, 235, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 10px 30px -8px rgba(37, 99, 235, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     @apply text-white transition-all duration-300;
   }
   .btn-glow:hover {
-    box-shadow: 0 16px 40px -8px rgba(37, 99, 235, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    box-shadow: 0 16px 44px -8px rgba(37, 99, 235, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
   }
 }
 
-/* Floating glow orbs for the hero */
+/* Floating glow orbs */
 @keyframes float-slow {
   0%, 100% { transform: translateY(0) translateX(0); }
   50% { transform: translateY(-24px) translateX(12px); }
 }
 .animate-float-slow { animation: float-slow 9s ease-in-out infinite; }
 .animate-float-slower { animation: float-slow 13s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow, .animate-float-slower { animation: none; }
+  html { scroll-behavior: auto; }
+}

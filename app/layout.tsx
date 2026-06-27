@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { niche } from "@/lib/niche.config";
+import { Tilt } from "@/components/Tilt";
 
 const display = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -39,9 +40,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="text-gradient">{niche.brand}</span>
             </Link>
             <div className="flex items-center gap-1 text-sm sm:gap-4">
-              <Link href="/directory" className="rounded-lg px-2 py-1.5 text-slate-600 transition hover:bg-white/60 hover:text-slate-900">Directory</Link>
-              <Link href="/pricing" className="rounded-lg px-2 py-1.5 text-slate-600 transition hover:bg-white/60 hover:text-slate-900">Pricing</Link>
-              <Link href="/dashboard" className="hidden rounded-lg px-2 py-1.5 text-slate-600 transition hover:bg-white/60 hover:text-slate-900 sm:block">Dashboard</Link>
+              <Link href="/directory" className="rounded-lg px-2 py-1.5 text-slate-300 transition hover:bg-white/10 hover:text-white">Directory</Link>
+              <Link href="/pricing" className="rounded-lg px-2 py-1.5 text-slate-300 transition hover:bg-white/10 hover:text-white">Pricing</Link>
+              <Link href="/dashboard" className="hidden rounded-lg px-2 py-1.5 text-slate-300 transition hover:bg-white/10 hover:text-white sm:block">Dashboard</Link>
               <Link href="/login" className="btn-glow rounded-xl px-4 py-2 font-semibold">
                 Sign in
               </Link>
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <Tilt />
         <footer className="mx-auto max-w-5xl px-4 py-12 text-xs text-slate-500">
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-slate-800">Privacy</Link>

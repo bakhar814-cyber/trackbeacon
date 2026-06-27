@@ -51,7 +51,7 @@ export default async function Landing() {
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 font-bold text-white shadow-glow">
               {i + 1}
             </div>
-            <p className="text-sm leading-relaxed text-slate-700">{b}</p>
+            <p className="text-sm leading-relaxed text-slate-300">{b}</p>
           </div>
         ))}
       </section>
@@ -69,11 +69,11 @@ export default async function Landing() {
             <Link
               key={it.slug}
               href={`/item/${it.slug}`}
-              className="flex items-center justify-between border-b border-slate-200/60 px-5 py-3.5 transition last:border-0 hover:bg-white/70"
+              className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 transition last:border-0 hover:bg-white/5"
             >
-              <span className="truncate pr-4 font-medium text-slate-800">{it.title}</span>
-              <span className="flex items-center gap-3 text-sm text-slate-500">
-                <span className="font-bold text-slate-900">{formatPrice(it.current_price, it.currency)}</span>
+              <span className="truncate pr-4 font-medium text-slate-200">{it.title}</span>
+              <span className="flex items-center gap-3 text-sm text-slate-400">
+                <span className="font-bold text-white">{formatPrice(it.current_price, it.currency)}</span>
                 <span className="hidden sm:inline">{timeAgo(it.last_changed_at)}</span>
               </span>
             </Link>

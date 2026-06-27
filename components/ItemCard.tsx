@@ -10,7 +10,7 @@ export function ItemCard({ item }: { item: Item }) {
       className="card-3d glass group block overflow-hidden rounded-2xl p-4"
     >
       <div className="flex gap-3">
-        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/10">
           {item.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -21,8 +21,8 @@ export function ItemCard({ item }: { item: Item }) {
           ) : null}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-slate-800">{item.title}</p>
-          <p className="mt-1 text-lg font-extrabold text-slate-900">
+          <p className="truncate font-semibold text-slate-100">{item.title}</p>
+          <p className="mt-1 text-lg font-extrabold text-white">
             {formatPrice(item.current_price, item.currency)}
           </p>
           <div className="mt-1.5">

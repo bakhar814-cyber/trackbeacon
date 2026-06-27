@@ -52,11 +52,11 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@email.com"
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-white placeholder-slate-500 outline-none transition focus:border-indigo-400/60 focus:bg-white/10"
           />
           <button
             disabled={loading}
-            className="w-full rounded-md bg-accent px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+            className="btn-glow w-full rounded-xl px-4 py-2.5 font-semibold disabled:opacity-50"
           >
             {loading ? "Sending…" : "Email me a code"}
           </button>
@@ -64,7 +64,7 @@ export default function Login() {
         </form>
       ) : (
         <form onSubmit={verify} className="mt-6 space-y-3">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-300">
             We emailed a code to <strong>{email}</strong>. Enter it below.
           </p>
           <input
@@ -75,11 +75,11 @@ export default function Login() {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="12345678"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-center text-lg tracking-widest"
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-center text-lg tracking-widest text-white placeholder-slate-600 outline-none transition focus:border-indigo-400/60 focus:bg-white/10"
           />
           <button
             disabled={loading}
-            className="w-full rounded-md bg-accent px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+            className="btn-glow w-full rounded-xl px-4 py-2.5 font-semibold disabled:opacity-50"
           >
             {loading ? "Verifying…" : "Verify & sign in"}
           </button>

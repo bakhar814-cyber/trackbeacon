@@ -92,7 +92,7 @@ export default async function ItemPage({ params }: { params: { slug: string } })
                 href={item.product_url}
                 target="_blank"
                 rel="nofollow noopener"
-                className="rounded-md border border-slate-300 px-4 py-2 font-medium"
+                className="rounded-xl border border-white/20 px-4 py-2 font-medium text-slate-200 transition hover:bg-white/10"
               >
                 View listing ↗
               </a>
@@ -101,8 +101,8 @@ export default async function ItemPage({ params }: { params: { slug: string } })
         </div>
       </div>
 
-      <section className="mt-10 rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Price history</h2>
+      <section className="glass mt-10 rounded-2xl p-5">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Price history</h2>
         <PriceChart points={(history as PricePoint[] | null) ?? []} />
       </section>
     </div>

@@ -41,8 +41,8 @@ export function TrackButton({ itemId, tracked }: { itemId: string; tracked: bool
       disabled={loading}
       className={`rounded-md px-4 py-2 font-medium transition ${
         isTracked
-          ? "border border-slate-300 bg-white text-slate-700"
-          : "bg-accent text-white hover:opacity-90"
+          ? "border border-white/15 bg-white/10 text-slate-200"
+          : "btn-glow"
       } disabled:opacity-50`}
     >
       {loading ? "…" : isTracked ? "Tracking ✓" : "Track this"}

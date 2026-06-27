@@ -31,13 +31,13 @@ export default async function Dashboard() {
         </Link>
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">
+      <div className="glass mt-4 flex items-center justify-between rounded-2xl px-4 py-3 text-sm">
         <span>
           <strong>{used}</strong> of <strong>{plan.maxTrackers}</strong> trackers used ·{" "}
-          <span className="text-slate-500">{plan.label} plan · checks {plan.checkIntervalMinutes >= 1440 ? "daily" : "hourly"}</span>
+          <span className="text-slate-400">{plan.label} plan · checks {plan.checkIntervalMinutes >= 1440 ? "daily" : "hourly"}</span>
         </span>
         {used >= plan.maxTrackers && plan.label === "Free" && (
-          <Link href="/pricing" className="font-semibold text-accent">Upgrade for more →</Link>
+          <Link href="/pricing" className="font-semibold text-indigo-300">Upgrade for more →</Link>
         )}
       </div>
 

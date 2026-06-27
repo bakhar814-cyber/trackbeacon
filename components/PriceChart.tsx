@@ -26,7 +26,13 @@ export function PriceChart({ points }: { points: PricePoint[] }) {
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label="Price history">
-      <path d={path} fill="none" stroke="#2563eb" strokeWidth={2} />
+      <defs>
+        <linearGradient id="spark" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#818cf8" />
+          <stop offset="100%" stopColor="#22d3ee" />
+        </linearGradient>
+      </defs>
+      <path d={path} fill="none" stroke="url(#spark)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
