@@ -169,6 +169,17 @@ every push — see [`.github/workflows`](.github/workflows) (and the root-level
 4. Deploy: web on Vercel, Postgres managed, worker on Railway/Render/Fly, and
    the scheduled `produce.yml` workflow.
 
+Verify a real LLM before producing a full episode:
+
+```bash
+PIPELINE_MODE=live LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=sk-... npm run smoke:llm
+```
+
+It makes one tiny request and prints the reply, the resolved model, and the
+measured cost. The Anthropic provider defaults to `claude-opus-4-8`, sends
+per-model pricing to the cost ledger, omits sampling params on models that
+reject them, and retries transient 429/5xx with backoff.
+
 Full instructions in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Any provider
 without a key transparently falls back to a mock, so a partial live config still
 produces episodes instead of crashing.

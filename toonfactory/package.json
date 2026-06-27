@@ -16,7 +16,8 @@
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "smoke:llm": "tsx scripts/smoke-llm.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
