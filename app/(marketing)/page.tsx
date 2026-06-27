@@ -13,8 +13,32 @@ export default async function Landing() {
     .order("last_changed_at", { ascending: false, nullsFirst: false })
     .limit(6);
 
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://trackbeacon.online";
+  const siteLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: niche.brand,
+        url: site,
+        description: niche.seo.description,
+      },
+      {
+        "@type": "WebSite",
+        name: niche.brand,
+        url: site,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: { "@type": "EntryPoint", urlTemplate: `${site}/directory?q={search_term_string}` },
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+
   return (
     <div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteLd) }} />
       {/* HERO ---------------------------------------------------------------- */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-6 py-20 text-center shadow-glow sm:py-24">
         {/* glowing depth orbs */}

@@ -70,9 +70,35 @@ export default async function ItemPage({ params }: { params: { slug: string } })
     },
   };
 
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://trackbeacon.online";
+  const priceStr = formatPrice(item.current_price, item.currency);
+  const stockStr = item.in_stock ? "in stock" : "out of stock";
+  const description = `${item.title} is currently ${priceStr} and ${stockStr}. TrackBeacon tracks the price and availability of the ${item.title} and sends you a free email the moment it restocks or drops in price — so you can buy at retail, not resale.`;
+  const faqs = [
+    { q: `How do I get a restock alert for the ${item.title}?`, a: `Create a free TrackBeacon account and tap "Track this" on this page. We'll email you the moment the ${item.title} is back in stock.` },
+    { q: `What is the current price of the ${item.title}?`, a: `As of the last check, the ${item.title} is ${priceStr} (${stockStr}). See the price history chart for recent changes.` },
+    { q: `How will I know when the ${item.title} drops in price?`, a: `TrackBeacon checks the price regularly and emails you instantly when it drops. It's free to start.` },
+  ];
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: site },
+      { "@type": "ListItem", position: 2, name: "Directory", item: `${site}/directory` },
+      { "@type": "ListItem", position: 3, name: item.title, item: `${site}/item/${item.slug}` },
+    ],
+  };
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  };
+
   return (
     <div className="mx-auto max-w-2xl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <div className="flex flex-col gap-6 sm:flex-row">
         {item.image_url && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -101,9 +127,23 @@ export default async function ItemPage({ params }: { params: { slug: string } })
         </div>
       </div>
 
-      <section className="glass mt-10 rounded-2xl p-5">
+      <p className="mt-8 leading-relaxed text-slate-300">{description}</p>
+
+      <section className="glass mt-8 rounded-2xl p-5">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Price history</h2>
         <PriceChart points={(history as PricePoint[] | null) ?? []} />
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-4 text-lg font-bold">Frequently asked</h2>
+        <div className="space-y-3">
+          {faqs.map((f) => (
+            <div key={f.q} className="glass rounded-2xl p-4">
+              <h3 className="font-semibold text-slate-100">{f.q}</h3>
+              <p className="mt-1.5 text-sm text-slate-300">{f.a}</p>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );
