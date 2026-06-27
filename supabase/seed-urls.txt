@@ -1,6 +1,7 @@
 # One product URL per line. Lines starting with # are ignored.
 # Sneaker product pages confirmed to expose schema.org Product + price (Shopify boutiques).
 
+# --- batch 1 ---
 https://www.shopholyground.com/products/jordan-1-retro-chicago-2039
 https://www.shopholyground.com/products/jordan-4-retro-white-cement-2112
 https://www.shopholyground.com/products/jordan-11-retro-concord-2061
@@ -13,3 +14,39 @@ https://www.socialstatuspgh.com/collections/sneakers/products/mens-new-balance-1
 https://www.socialstatuspgh.com/collections/sneakers/products/nike-shox-bb4
 https://www.socialstatuspgh.com/collections/sneakers/products/air-jordan-5-retro-black-multi-gs
 https://www.onenessboutique.com/products/nike-air-max-goadome-low-sp-in-taupe-iu5915-200-university-red-black
+
+# --- batch 2 ---
+https://www.shopholyground.com/products/nike-sb-dunk-high-wolf-in-sheeps-clothing-4
+https://www.shopholyground.com/products/new-balance-990v6-miusa-action-bronson-untitled-8
+https://www.shopholyground.com/products/nike-kobe-6-protro-jalen-brunson-statue-of-liberty-2
+https://www.shopholyground.com/products/nike-sb-dunk-low-mummy-51
+https://www.shopholyground.com/products/jordan-4-retro-sb-pine-green-163
+https://www.shopholyground.com/products/jordan-1-retro-high-og-palomino-70
+https://www.shopholyground.com/products/jordan-11-retro-playoffs-bred-2090
+https://undefeated.com/products/nike-acg-zegama-black-anthracite
+https://undefeated.com/products/asics-gel-kayano-14-white-waterfall
+https://undefeated.com/products/new-balance-740-mercuryred
+https://undefeated.com/products/adidas-gazelle-indoor-cgreen-ftwwht
+https://undefeated.com/products/air-griffey-max-1-black-multi-color-freshwater-white
+https://www.kickgame.com/products/saucony-progrid-guide-7-fog-naval
+https://www.kickgame.com/products/on-cloudsurfer-next-black-eclipse
+https://www.kickgame.com/products/on-cloudrunner-3-black-ivory
+https://two18.com/collections/jordan-shoes/products/air-jordan-1-retro-low-phantom-pine-green-black
+https://two18.com/collections/jordan-shoes/products/air-jordan-3-retro-gssail-black-university-red-pale-ivory
+https://two18.com/collections/jordan-shoes/products/air-jordan-1-mid-gsuniversity-blue-midnight-navy-white
+https://two18.com/collections/jordan-shoes/products/air-jordan-spizike-low-neo-turq-vivid-green-lt-crimson
+https://www.socialstatuspgh.com/collections/sneakers/products/coca-cola-samba-red
+https://www.socialstatuspgh.com/collections/sneakers/products/kd-6-gs-black-multi
+https://www.socialstatuspgh.com/collections/sneakers/products/air-liquid-max-black-metallic-gold
+https://www.socialstatuspgh.com/collections/sneakers/products/air-jordan-4-retro-fire-red-white
+https://www.onenessboutique.com/products/nike-air-force-1-07-in-white-volt-copy-1
+https://www.onenessboutique.com/products/air-jordan-1-low-se-in-black-sail-ir7560-010-light-british-tan
+https://www.onenessboutique.com/products/womens-nike-air-max-95-big-bubble-ib6396-101-lt-orewood-brn-phantom-platinum-tint
+https://bdgastore.com/products/jordan-4-retro-flight-club-1
+https://bdgastore.com/products/kobe-4-protro-draft-pack
+https://www.a-ma-maniere.com/products/1300-grey
+https://www.a-ma-maniere.com/products/court-pack-stan-smith-80s-white-green
+https://extrabutterny.com/products/new-balance-mens-abzorb-1890-shoes-u18901iu
+https://cncpts.com/products/air-jordan-1-retro-low-og-gs-phantom-and-pine-green-phantom-pine-green-black
+https://cncpts.com/products/nike-air-liquid-max-black-metallic-gold-team-red-fire-red
+https://cncpts.com/products/golden-goose-super-star-suede-and-nabuk-upper-blue-denim-silver-blue
