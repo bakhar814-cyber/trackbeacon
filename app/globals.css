@@ -6,9 +6,65 @@
   color-scheme: light;
 }
 
-html, body {
-  background: #f8fafc;
-  color: #0f172a;
+html {
+  scroll-behavior: smooth;
 }
 
-/* Keep it boring and trustworthy. Speed > flourish. */
+html,
+body {
+  color: #0b1120;
+  background-color: #eef2fb;
+  /* Soft premium depth: layered radial glows behind everything. */
+  background-image:
+    radial-gradient(60rem 60rem at 110% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+    radial-gradient(50rem 50rem at -10% 0%, rgba(59, 130, 246, 0.16), transparent 55%),
+    radial-gradient(40rem 40rem at 50% 120%, rgba(168, 85, 247, 0.12), transparent 60%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Frosted glass surface */
+  .glass {
+    @apply border border-white/60 bg-white/70 backdrop-blur-xl;
+  }
+
+  /* Premium 3D card: lifts and tilts slightly on hover */
+  .card-3d {
+    @apply transition-all duration-300 ease-out will-change-transform;
+    transform: perspective(1000px) translateZ(0);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  }
+  .card-3d:hover {
+    transform: perspective(1000px) translateY(-6px) rotateX(2deg);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 30px 60px -18px rgba(37, 99, 235, 0.35);
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(120deg, #4f46e5, #2563eb 40%, #06b6d4);
+  }
+
+  /* Glowing gradient button */
+  .btn-glow {
+    background-image: linear-gradient(120deg, #4f46e5, #2563eb 55%, #0ea5e9);
+    box-shadow: 0 10px 30px -8px rgba(37, 99, 235, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    @apply text-white transition-all duration-300;
+  }
+  .btn-glow:hover {
+    box-shadow: 0 16px 40px -8px rgba(37, 99, 235, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+}
+
+/* Floating glow orbs for the hero */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-24px) translateX(12px); }
+}
+.animate-float-slow { animation: float-slow 9s ease-in-out infinite; }
+.animate-float-slower { animation: float-slow 13s ease-in-out infinite; }
