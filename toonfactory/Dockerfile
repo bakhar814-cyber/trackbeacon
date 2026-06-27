@@ -38,7 +38,9 @@ RUN npm run build
 # ---- Stage 3: runtime ------------------------------------------------------
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates curl \
+# ffmpeg is required by the worker's video-editing stage (VIDEO_PROVIDER=ffmpeg)
+# to assemble the finished MP4; openssl for Prisma, curl for healthchecks.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates curl ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
