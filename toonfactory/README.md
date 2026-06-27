@@ -266,6 +266,8 @@ applicable rights and terms.
 
 - [docs/RUNBOOK.md](docs/RUNBOOK.md) — **fully automated setup**: connect YouTube,
   turn on real content, run 24/7, verify, tune.
+- [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md) — **easiest hosting**, click-by-click
+  (browser only): one Railway service + Postgres, no terminal.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system overview, provider
   architecture, the 12-stage pipeline, queue design, cost strategy, diagrams.
 - [docs/API.md](docs/API.md) — REST endpoints with request/response examples.
