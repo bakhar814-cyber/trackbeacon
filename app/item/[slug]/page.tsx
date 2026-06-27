@@ -21,9 +21,15 @@ async function getItem(slug: string) {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const item = await getItem(params.slug);
   if (!item) return { title: "Not found" };
+  const title = `${item.title} — price & stock | ${niche.brand}`;
+  const description = `Live price (${formatPrice(item.current_price, item.currency)}) and stock status for ${item.title}. Get alerted when it drops or restocks.`;
+  const images = item.image_url ? [item.image_url] : undefined;
   return {
-    title: `${item.title} — price & stock | ${niche.brand}`,
-    description: `Live price (${formatPrice(item.current_price, item.currency)}) and stock status for ${item.title}. Get alerted when it drops or restocks.`,
+    title,
+    description,
+    alternates: { canonical: `/item/${item.slug}` },
+    openGraph: { title, description, images, type: "website" },
+    twitter: { card: "summary_large_image", title, description, images },
   };
 }
 
