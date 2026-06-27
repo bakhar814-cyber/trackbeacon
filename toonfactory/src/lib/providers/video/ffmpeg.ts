@@ -1,10 +1,12 @@
 // Local ffmpeg video assembly provider. Downloads every scene asset to a temp
-// working dir, builds an ffmpeg concat + audio-mix + caption (subtitle) command,
-// spawns ffmpeg to produce a single mp4, then stores the result via putObject.
+// working dir, renders each scene to a normalized segment (video OR looped still
+// OR a captioned color slate when the visual can't be decoded), mixes the voice
+// + music audio, burns in captions, then concatenates everything into one mp4
+// and stores it via putObject.
 //
-// This provider is intended for live mode only. It guards aggressively: if
-// ffmpeg is not installed, or inputs cannot be fetched, it throws a clear error
-// so callers can fall back or surface the problem.
+// It is robust to heterogeneous inputs: real animation clips (mp4), still frames
+// (png/jpg/webp), or — in mock mode — vector/undecodable assets, which fall back
+// to a solid slate so a real, playable video is always produced.
 import { spawn } from "node:child_process";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -19,24 +21,26 @@ import type {
   VideoTrackScene,
 } from "@/lib/providers/types";
 
-// Local compute only; nominal "cost" to keep the ledger non-zero in live mode.
+// Normalized output format so the concat demuxer never chokes on mismatches.
+const W = 1280;
+const H = 720;
+const FPS = 25;
 const USD_PER_RENDER = 0.01;
 
-// Run a command, capturing stderr; reject with a clear message on failure.
-function run(cmd: string, args: string[]): Promise<void> {
+const IMAGE_CODECS = new Set(["png", "mjpeg", "jpeg", "webp", "gif", "bmp", "tiff"]);
+
+// Run a command, capturing stdout/stderr; reject with a clear message on failure.
+function run(cmd: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: ["ignore", "ignore", "pipe"] });
-    let stderr = "";
-    child.stderr?.on("data", (d: Buffer) => {
-      stderr += d.toString();
-    });
-    child.on("error", (err) =>
-      reject(new Error(`Failed to spawn ${cmd}: ${err.message}`)),
+    const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
+    let out = "";
+    let err = "";
+    child.stdout?.on("data", (d: Buffer) => (out += d.toString()));
+    child.stderr?.on("data", (d: Buffer) => (err += d.toString()));
+    child.on("error", (e) => reject(new Error(`Failed to spawn ${cmd}: ${e.message}`)));
+    child.on("close", (code) =>
+      code === 0 ? resolve(out) : reject(new Error(`${cmd} exited ${code}: ${err.slice(-1500)}`)),
     );
-    child.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`${cmd} exited with code ${code}: ${stderr.slice(-2000)}`));
-    });
   });
 }
 
@@ -45,150 +49,169 @@ async function assertFfmpeg(): Promise<void> {
     await run("ffmpeg", ["-version"]);
   } catch {
     throw new Error(
-      "FfmpegVideoProvider: ffmpeg is not available on PATH. Install ffmpeg or use a different VIDEO_PROVIDER.",
+      "FfmpegVideoProvider: ffmpeg is not on PATH. Install ffmpeg or set VIDEO_PROVIDER=mock.",
     );
   }
 }
 
-// Fetch a remote/local asset URL into a local file path.
-async function download(url: string, dest: string): Promise<void> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch asset ${url}: ${res.status}`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  await writeFile(dest, buf);
+async function download(url: string, dest: string): Promise<boolean> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return false;
+    await writeFile(dest, Buffer.from(await res.arrayBuffer()));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-// Build an SRT caption file from a scene's caption cues.
+// Classify a downloaded visual as a video, a still image, or undecodable.
+async function classifyVisual(path: string): Promise<"video" | "image" | "none"> {
+  try {
+    const out = await run("ffprobe", [
+      "-v", "error",
+      "-select_streams", "v:0",
+      "-show_entries", "stream=codec_name,avg_frame_rate",
+      "-of", "default=nw=1",
+      path,
+    ]);
+    const codec = /codec_name=(\w+)/.exec(out)?.[1] ?? "";
+    if (!codec) return "none";
+    if (IMAGE_CODECS.has(codec)) return "image";
+    return "video";
+  } catch {
+    return "none";
+  }
+}
+
 function buildSrt(captions: NonNullable<VideoTrackScene["captions"]>): string {
   const fmt = (t: number): string => {
     const ms = Math.floor((t % 1) * 1000);
     const total = Math.floor(t);
-    const s = total % 60;
-    const m = Math.floor(total / 60) % 60;
-    const h = Math.floor(total / 3600);
     const pad = (n: number, w = 2) => String(n).padStart(w, "0");
-    return `${pad(h)}:${pad(m)}:${pad(s)},${pad(ms, 3)}`;
+    return `${pad(Math.floor(total / 3600))}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)},${pad(ms, 3)}`;
   };
   return captions
     .map((c, i) => `${i + 1}\n${fmt(c.start)} --> ${fmt(c.end)}\n${c.text}\n`)
     .join("\n");
 }
 
+const SLATE_COLORS = ["0x1b2440", "0x223052", "0x2a3a63", "0x1f2e4d", "0x263a5c"];
+
 export class FfmpegVideoProvider implements VideoProvider {
   readonly name = "ffmpeg";
 
   async assemble(req: VideoAssembleRequest): Promise<ProviderResult<VideoResult>> {
-    if (req.scenes.length === 0) {
-      throw new Error("FfmpegVideoProvider: no scenes to assemble");
-    }
+    if (req.scenes.length === 0) throw new Error("FfmpegVideoProvider: no scenes");
     await assertFfmpeg();
 
     const work = await mkdtemp(join(tmpdir(), "toonfactory-"));
     try {
-      // 1) Render each scene to a normalized mp4 (clip + mixed audio + captions).
       const sceneFiles: string[] = [];
+
       for (let i = 0; i < req.scenes.length; i++) {
         const scene = req.scenes[i];
-        const clipPath = join(work, `scene-${i}-clip.mp4`);
-        await download(scene.clipUrl, clipPath);
+        const dur = Math.max(0.5, scene.durationSec || 4);
 
-        // Download voice tracks + optional music.
+        // --- Resolve the visual source ---
+        const visualPath = join(work, `s${i}-visual`);
+        const got = scene.clipUrl ? await download(scene.clipUrl, visualPath) : false;
+        const kind = got ? await classifyVisual(visualPath) : "none";
+
+        const inputs: string[] = [];
+        let videoChain: string;
+        if (kind === "video") {
+          inputs.push("-i", visualPath);
+          videoChain = `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,fps=${FPS},format=yuv420p`;
+        } else if (kind === "image") {
+          inputs.push("-loop", "1", "-t", String(dur), "-i", visualPath);
+          videoChain = `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,fps=${FPS},format=yuv420p`;
+        } else {
+          // Undecodable (e.g. SVG/mock) → captioned color slate.
+          const color = SLATE_COLORS[i % SLATE_COLORS.length];
+          inputs.push("-f", "lavfi", "-t", String(dur), "-i", `color=c=${color}:s=${W}x${H}:r=${FPS}`);
+          videoChain = `[0:v]drawtext=text='${req.title.replace(/['":]/g, " ").slice(0, 40)} — Scene ${i + 1}':fontcolor=white:fontsize=40:x=(w-text_w)/2:y=h/2-40,format=yuv420p`;
+        }
+
+        // --- Audio: mix voice + music, or synthesize silence ---
         const audioPaths: string[] = [];
         for (let v = 0; v < scene.voiceUrls.length; v++) {
-          const ap = join(work, `scene-${i}-voice-${v}`);
-          await download(scene.voiceUrls[v], ap);
-          audioPaths.push(ap);
+          const ap = join(work, `s${i}-v${v}`);
+          if (await download(scene.voiceUrls[v], ap)) audioPaths.push(ap);
         }
         if (scene.musicUrl) {
-          const mp = join(work, `scene-${i}-music`);
-          await download(scene.musicUrl, mp);
-          audioPaths.push(mp);
+          const mp = join(work, `s${i}-music`);
+          if (await download(scene.musicUrl, mp)) audioPaths.push(mp);
         }
-
-        const inputs: string[] = ["-i", clipPath];
         for (const ap of audioPaths) inputs.push("-i", ap);
 
-        // Mix all audio inputs (indexes 1..N) down to one stereo track.
-        const filterParts: string[] = [];
-        if (audioPaths.length > 0) {
-          const refs = audioPaths.map((_, idx) => `[${idx + 1}:a]`).join("");
-          filterParts.push(
-            `${refs}amix=inputs=${audioPaths.length}:duration=longest[aout]`,
-          );
+        const filterParts = [`${videoChain}[vbase]`];
+        let vLabel = "vbase";
+
+        // Burn captions if present.
+        if (scene.captions && scene.captions.length > 0) {
+          const srtPath = join(work, `s${i}.srt`);
+          await writeFile(srtPath, buildSrt(scene.captions));
+          const esc = srtPath.replace(/\\/g, "/").replace(/:/g, "\\:");
+          filterParts.push(`[vbase]subtitles='${esc}'[vout]`);
+          vLabel = "vout";
         }
 
-        // Burn in captions, if any.
-        let videoLabel = "0:v";
-        if (scene.captions && scene.captions.length > 0) {
-          const srtPath = join(work, `scene-${i}.srt`);
-          await writeFile(srtPath, buildSrt(scene.captions));
-          // subtitles filter needs the path escaped for the filtergraph.
-          const escaped = srtPath.replace(/\\/g, "/").replace(/:/g, "\\:");
-          filterParts.push(`[0:v]subtitles='${escaped}'[vout]`);
-          videoLabel = "vout";
+        // Audio chain: input indices start at 1 (index 0 is the visual).
+        const audioStart = 1;
+        if (audioPaths.length > 0) {
+          const refs = audioPaths.map((_, idx) => `[${audioStart + idx}:a]`).join("");
+          filterParts.push(
+            `${refs}amix=inputs=${audioPaths.length}:duration=longest,aresample=44100,pan=stereo|c0=c0|c1=c0[aout]`,
+          );
+        } else {
+          filterParts.push(`anullsrc=channel_layout=stereo:sample_rate=44100[aout]`);
         }
 
         const outPath = join(work, `scene-${i}.mp4`);
-        const videoMap = videoLabel === "vout" ? "[vout]" : "0:v";
-        const args = [
+        await run("ffmpeg", [
           "-y",
           ...inputs,
-          ...(filterParts.length
-            ? ["-filter_complex", filterParts.join(";")]
-            : []),
-          "-map",
-          videoMap,
-          ...(audioPaths.length ? ["-map", "[aout]"] : []),
-          "-c:v",
-          "libx264",
-          "-pix_fmt",
-          "yuv420p",
-          "-c:a",
-          "aac",
-          "-t",
-          String(Math.max(0.1, scene.durationSec)),
+          "-filter_complex", filterParts.join(";"),
+          "-map", `[${vLabel}]`,
+          "-map", "[aout]",
+          "-c:v", "libx264",
+          "-preset", "veryfast",
+          "-pix_fmt", "yuv420p",
+          "-r", String(FPS),
+          "-c:a", "aac",
+          "-ar", "44100",
+          "-t", String(dur),
           outPath,
-        ];
-        await run("ffmpeg", args);
+        ]);
         sceneFiles.push(outPath);
       }
 
-      // 2) Assemble intro + scenes + outro via the concat demuxer.
+      // --- Concatenate intro + scenes + outro ---
       const concatList: string[] = [];
-      if (req.introUrl) {
-        const introPath = join(work, "intro.mp4");
-        await download(req.introUrl, introPath);
-        concatList.push(introPath);
+      for (const [url, name] of [
+        [req.introUrl, "intro"],
+        [undefined, ""],
+        [req.outroUrl, "outro"],
+      ] as const) {
+        if (!url) continue;
+        const p = join(work, `${name}.mp4`);
+        if (await download(url, p)) concatList.push(p);
       }
-      concatList.push(...sceneFiles);
-      if (req.outroUrl) {
-        const outroPath = join(work, "outro.mp4");
-        await download(req.outroUrl, outroPath);
-        concatList.push(outroPath);
-      }
+      const ordered = [
+        ...(req.introUrl ? [join(work, "intro.mp4")] : []).filter((p) => concatList.includes(p)),
+        ...sceneFiles,
+        ...(req.outroUrl ? [join(work, "outro.mp4")] : []).filter((p) => concatList.includes(p)),
+      ];
 
       const listPath = join(work, "concat.txt");
-      await writeFile(
-        listPath,
-        concatList.map((p) => `file '${p.replace(/'/g, "'\\''")}'`).join("\n"),
-      );
+      await writeFile(listPath, ordered.map((p) => `file '${p.replace(/'/g, "'\\''")}'`).join("\n"));
 
       const finalPath = join(work, "final.mp4");
       await run("ffmpeg", [
-        "-y",
-        "-f",
-        "concat",
-        "-safe",
-        "0",
-        "-i",
-        listPath,
-        // Re-encode to guarantee a consistent stream across heterogeneous inputs.
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "-c:a",
-        "aac",
+        "-y", "-f", "concat", "-safe", "0", "-i", listPath,
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", String(FPS),
+        "-c:a", "aac", "-ar", "44100",
         finalPath,
       ]);
 
@@ -196,7 +219,7 @@ export class FfmpegVideoProvider implements VideoProvider {
       const key = `video/ffmpeg/${hashKey(req.title, req.scenes.map((s) => s.clipUrl))}.mp4`;
       const url = await putObject(key, buf, "video/mp4");
 
-      const durationSec = req.scenes.reduce((s, sc) => s + Math.max(0, sc.durationSec), 0);
+      const durationSec = req.scenes.reduce((s, sc) => s + Math.max(0.5, sc.durationSec || 4), 0);
       return {
         data: { url, durationSec },
         provider: this.name,

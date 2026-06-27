@@ -6,14 +6,13 @@ import { ShotstackVideoProvider } from "./shotstack";
 import { MockVideoProvider } from "./mock";
 
 export function getVideoProvider(): VideoProvider {
-  // ffmpeg is a local tool and needs no API key; shotstack needs one.
-  const isFfmpeg = config.providers.video === "ffmpeg";
-  const hasKey = isFfmpeg || !!config.keys.shotstack;
-  const chosen = effectiveProvider("video", hasKey);
+  // ffmpeg is a free local tool (no API key, no external cost), so it is honored
+  // even in mock mode — letting you render real MP4s without going fully live.
+  // If the ffmpeg binary is absent, assemble() throws a clear, actionable error.
+  if (config.providers.video === "ffmpeg") return new FfmpegVideoProvider();
 
+  const chosen = effectiveProvider("video", !!config.keys.shotstack);
   switch (chosen) {
-    case "ffmpeg":
-      return new FfmpegVideoProvider();
     case "shotstack":
       if (config.keys.shotstack) return new ShotstackVideoProvider();
       break;
