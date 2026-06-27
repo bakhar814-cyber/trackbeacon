@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: niche.seo.title,
   description: niche.seo.description,
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  verification: { google: "5MZ1P4JiOyDE-QHZwqoHgYKhZ2jUQ2ECeCT5X1NyA9M" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
