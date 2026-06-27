@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ink text-slate-200 antialiased;
+    background-image:
+      radial-gradient(60rem 60rem at 100% -10%, rgba(124, 92, 255, 0.08), transparent 60%),
+      radial-gradient(50rem 50rem at -10% 10%, rgba(34, 211, 238, 0.06), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  * {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/5 bg-panel/80 p-5 shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset] backdrop-blur;
+  }
+
+  .card-hover {
+    @apply transition-colors hover:border-brand/30 hover:bg-panel2/80;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .table-row {
+    @apply border-b border-white/5 last:border-0;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 92, 255, 0.25);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 92, 255, 0.45);
+  background-clip: content-box;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 92, 255, 0.3) transparent;
+}

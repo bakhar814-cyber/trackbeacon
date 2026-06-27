@@ -1,0 +1,374 @@
+// ToonFactory data model
+// PostgreSQL + Prisma. Covers the full domain: story universe, episode
+// production pipeline, generated assets, job queue, analytics, and revenue.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================================================
+// STORY UNIVERSE
+// ===========================================================================
+
+model Series {
+  id          String   @id @default(cuid())
+  title       String
+  logline     String
+  // World rules, tone, target age, art-style bible, do/don't lists.
+  worldRules  Json     @default("{}")
+  artStyle    Json     @default("{}")
+  targetAge   String   @default("3-8")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  characters  Character[]
+  locations   Location[]
+  episodes    Episode[]
+  relationships Relationship[]
+}
+
+model Character {
+  id          String   @id @default(cuid())
+  seriesId    String
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  name        String
+  role        String   @default("supporting") // protagonist | antagonist | supporting
+  // Frozen design spec used for every render to keep appearance identical.
+  appearance  Json     @default("{}") // hair, eyes, body, palette hex codes
+  clothing    Json     @default("{}")
+  personality Json     @default("{}")
+  age         String   @default("")
+  // Voice profile id + emotional defaults, mapped to the voice provider.
+  voiceProfile Json    @default("{}")
+  // A short "design token" string injected verbatim into every image prompt.
+  designToken String   @default("")
+  // Reference image used by image providers for character consistency.
+  refImageUrl String?
+  arc         Json     @default("[]") // tracked character development beats
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appearancesA Relationship[] @relation("CharA")
+  appearancesB Relationship[] @relation("CharB")
+
+  @@index([seriesId])
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  seriesId    String
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  name        String
+  description String
+  visualSpec  Json     @default("{}")
+  refImageUrl String?
+  createdAt   DateTime @default(now())
+
+  @@index([seriesId])
+}
+
+model Relationship {
+  id          String   @id @default(cuid())
+  seriesId    String
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  aId         String
+  a           Character @relation("CharA", fields: [aId], references: [id], onDelete: Cascade)
+  bId         String
+  b           Character @relation("CharB", fields: [bId], references: [id], onDelete: Cascade)
+  kind        String    // friend | sibling | rival | mentor ...
+  status      String    @default("neutral")
+  notes       String    @default("")
+  updatedAt   DateTime  @updatedAt
+
+  @@index([seriesId])
+}
+
+// A persistent, queryable log of canon facts. The Story Manager reads the most
+// recent N facts to keep continuity and prevent plot holes across episodes.
+model CanonFact {
+  id          String   @id @default(cuid())
+  seriesId    String
+  episodeId   String?
+  category    String   // event | reveal | item | rule | relationship
+  summary     String
+  // Embedding-ready text; can be fed to a vector store later.
+  detail      String   @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([seriesId])
+  @@index([episodeId])
+}
+
+// ===========================================================================
+// EPISODES & PRODUCTION
+// ===========================================================================
+
+enum EpisodeStatus {
+  PLANNED
+  WRITING
+  STORYBOARD
+  ASSETS
+  ANIMATION
+  AUDIO
+  EDITING
+  REVIEW
+  READY
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+model Episode {
+  id            String        @id @default(cuid())
+  seriesId      String
+  series        Series        @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  number        Int           // sequential episode number within the series
+  title         String        @default("")
+  status        EpisodeStatus @default(PLANNED)
+
+  // Narrative payload produced by the script stage.
+  hook          String        @default("")
+  outline       Json          @default("[]")
+  cliffhanger   String        @default("")
+  nextSetup     String        @default("")
+  script        Json          @default("{}") // full narration + dialogue tree
+
+  targetSeconds Int           @default(900)
+
+  // SEO payload.
+  seo           Json          @default("{}")
+
+  // Final artifacts.
+  videoUrl      String?
+  thumbnailUrl  String?
+  youtubeId     String?
+  scheduledFor  DateTime?
+  publishedAt   DateTime?
+
+  // Aggregated cost in micro-dollars (1e-6 USD) for precise accounting.
+  costMicroUsd  Int           @default(0)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  scenes        Scene[]
+  assets        Asset[]
+  jobs          Job[]
+  thumbnails    Thumbnail[]
+  analytics     AnalyticsSnapshot[]
+
+  @@unique([seriesId, number])
+  @@index([status])
+}
+
+model Scene {
+  id          String   @id @default(cuid())
+  episodeId   String
+  episode     Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  index       Int
+  heading     String   @default("")
+  description String   @default("")
+  locationRef String?  // Location id or name
+  characters  Json     @default("[]") // character ids present
+  narration   String   @default("")
+  dialogue    Json     @default("[]") // [{ characterId, line, emotion }]
+  mood        String   @default("neutral")
+  durationSec Int      @default(0)
+  // Storyboard prompt + generated frames/clip.
+  imagePrompt String   @default("")
+  imageUrl    String?
+  clipUrl     String?  // animated clip
+  voiceUrls   Json     @default("[]")
+  musicUrl    String?
+
+  @@unique([episodeId, index])
+  @@index([episodeId])
+}
+
+enum AssetKind {
+  CHARACTER
+  BACKGROUND
+  PROP
+  ACTION
+  THUMBNAIL
+  VOICE
+  MUSIC
+  SFX
+  CLIP
+  VIDEO
+}
+
+// Content-addressed asset store enabling caching + reuse across episodes.
+model Asset {
+  id          String    @id @default(cuid())
+  episodeId   String?
+  episode     Episode?  @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+  kind        AssetKind
+  provider    String    @default("")
+  // Hash of the generation request — reused when an identical request recurs.
+  cacheKey    String    @unique
+  prompt      String    @default("")
+  url         String
+  meta        Json      @default("{}")
+  costMicroUsd Int      @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@index([kind])
+  @@index([episodeId])
+}
+
+// ===========================================================================
+// JOB QUEUE (database-backed; pluggable to Redis/BullMQ in production)
+// ===========================================================================
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  episodeId   String?
+  episode     Episode?  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  // Pipeline stage name, e.g. "script", "images", "animation", "upload".
+  stage       String
+  status      JobStatus @default(QUEUED)
+  priority    Int       @default(0)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  payload     Json      @default("{}")
+  result      Json      @default("{}")
+  error       String?
+  // Lease fields for safe concurrent workers.
+  lockedBy    String?
+  lockedAt    DateTime?
+  runAfter    DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, runAfter])
+  @@index([episodeId])
+}
+
+// ===========================================================================
+// THUMBNAILS
+// ===========================================================================
+
+model Thumbnail {
+  id          String   @id @default(cuid())
+  episodeId   String
+  episode     Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  url         String
+  prompt      String   @default("")
+  // CTR-predictor score 0..100 + per-criteria breakdown.
+  score       Float    @default(0)
+  scoreDetail Json     @default("{}")
+  chosen      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([episodeId])
+}
+
+// ===========================================================================
+// ANALYTICS & REVENUE
+// ===========================================================================
+
+model AnalyticsSnapshot {
+  id            String   @id @default(cuid())
+  episodeId     String?
+  episode       Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  capturedAt    DateTime @default(now())
+  views         Int      @default(0)
+  watchTimeMin  Int      @default(0)
+  impressions   Int      @default(0)
+  ctr           Float    @default(0)   // 0..1
+  avgViewPct    Float    @default(0)   // retention 0..1
+  subsGained    Int      @default(0)
+  likes         Int      @default(0)
+  comments      Int      @default(0)
+  rpmUsd        Float    @default(0)
+  revenueUsd    Float    @default(0)
+
+  @@index([episodeId])
+  @@index([capturedAt])
+}
+
+// Channel-wide rollup used by the monetization assistant.
+model ChannelStat {
+  id             String   @id @default(cuid())
+  capturedAt     DateTime @default(now())
+  subscribers    Int      @default(0)
+  totalViews     Int      @default(0)
+  watchTimeHours Float    @default(0)  // rolling 365-day public watch hours
+  monetized      Boolean  @default(false)
+
+  @@index([capturedAt])
+}
+
+// ===========================================================================
+// COST TRACKING & LOGGING
+// ===========================================================================
+
+model CostEvent {
+  id           String   @id @default(cuid())
+  episodeId    String?
+  provider     String
+  category     String   // llm | image | voice | music | animation | video | upload
+  units        Float    @default(0)
+  unit         String   @default("")
+  costMicroUsd Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([provider])
+  @@index([createdAt])
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+}
+
+model LogEntry {
+  id        String   @id @default(cuid())
+  level     LogLevel @default(INFO)
+  scope     String   @default("")
+  episodeId String?
+  jobId     String?
+  message   String
+  meta      Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([level])
+  @@index([createdAt])
+  @@index([episodeId])
+}
+
+// Persisted, AI-generated optimization recommendations.
+model Recommendation {
+  id         String   @id @default(cuid())
+  area       String   // titles | thumbnails | pacing | length | schedule | revenue
+  title      String
+  detail     String
+  impact     String   @default("medium") // low | medium | high
+  applied    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([area])
+}
+
+// Key/value settings store editable from the admin dashboard.
+model Setting {
+  key       String   @id
+  value     Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}

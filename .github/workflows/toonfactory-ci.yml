@@ -1,0 +1,66 @@
+# Root-level CI for the ToonFactory project, which lives in the toonfactory/
+# subdirectory. GitHub only runs workflows from .github/workflows at the repo
+# root, so this thin wrapper runs the same steps as toonfactory/.github/
+# workflows/ci.yml but scoped to changes under toonfactory/**.
+name: ToonFactory CI
+
+on:
+  push:
+    branches: ["**"]
+    paths: ["toonfactory/**", ".github/workflows/toonfactory-ci.yml"]
+  pull_request:
+    branches: ["**"]
+    paths: ["toonfactory/**", ".github/workflows/toonfactory-ci.yml"]
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+defaults:
+  run:
+    working-directory: toonfactory
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PIPELINE_MODE: mock
+      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci?schema=public"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: toonfactory/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm run build
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: toon
+          POSTGRES_PASSWORD: toon
+          POSTGRES_DB: toonfactory
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U toon"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      PIPELINE_MODE: mock
+      DATABASE_URL: "postgresql://toon:toon@localhost:5432/toonfactory?schema=public"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: toonfactory/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma db push --skip-generate
+      - run: npm test

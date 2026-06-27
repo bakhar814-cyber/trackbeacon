@@ -1,0 +1,68 @@
+# ============================================================================
+# ToonFactory — local / single-host deployment.
+#
+#   docker compose up --build
+#
+# Brings up:
+#   • db     → PostgreSQL 16 (persistent volume + healthcheck)
+#   • web    → Next.js dashboard + API (runs `prisma migrate deploy` then starts)
+#   • worker → the job-queue worker (same image, different command)
+#
+# Provider keys / overrides come from your local .env (env_file below).
+# The DATABASE_URL here points at the `db` service and matches the credentials
+# defined in the db service environment (and the form used in .env.example).
+# ============================================================================
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: toon
+      POSTGRES_PASSWORD: toon
+      POSTGRES_DB: toonfactory
+    ports:
+      - "5432:5432"
+    volumes:
+      - toonfactory_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toon -d toonfactory"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Override the DB host to the compose service name regardless of .env.
+      DATABASE_URL: "postgresql://toon:toon@db:5432/toonfactory?schema=public"
+      NODE_ENV: production
+      APP_BASE_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    # Apply migrations on boot, then serve. (Run `npm run seed` once manually for demo data.)
+    command: sh -c "npx prisma migrate deploy && npm start"
+
+  worker:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql://toon:toon@db:5432/toonfactory?schema=public"
+      NODE_ENV: production
+    command: npm run worker
+
+volumes:
+  toonfactory_pgdata:
