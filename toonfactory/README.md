@@ -133,6 +133,31 @@ curl -X POST http://localhost:3000/api/cron/produce \
   -H "x-cron-secret: $(grep CRON_SECRET .env | cut -d= -f2)"
 ```
 
+### Render real MP4s locally (no cloud, no keys)
+
+The ffmpeg video provider is a free local tool, so it works even in mock mode.
+With `ffmpeg` installed, set `VIDEO_PROVIDER=ffmpeg` and every episode exports a
+real, playable 1280×720 H.264 + AAC `.mp4` — clips/stills + mixed voice & music +
+burned-in captions, with intro/outro/concat handled automatically. Undecodable
+mock visuals fall back to captioned slates so a valid video is always produced.
+
+---
+
+## Testing
+
+```bash
+npm test            # unit + mock-provider tests (no database needed)
+DATABASE_URL=postgresql://… npm test   # also runs the full-pipeline + queue
+                                       # integration suite against Postgres
+```
+
+The suite covers cost math, thumbnail scoring, continuity prompting, the loose
+JSON parser, every mock provider's output shape, the job queue's lease/retry
+semantics, and a complete 12-stage episode run that asserts the episode reaches
+`SCHEDULED` with a video, thumbnail, scenes, and SEO. CI runs all of this on
+every push — see [`.github/workflows`](.github/workflows) (and the root-level
+`toonfactory-ci.yml`, since GitHub runs workflows from the repository root).
+
 ---
 
 ## Going live
