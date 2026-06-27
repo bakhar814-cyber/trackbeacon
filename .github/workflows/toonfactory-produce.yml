@@ -1,0 +1,40 @@
+name: ToonFactory Daily Production
+
+# Triggers the production pipeline on the deployed ToonFactory app twice a day.
+# The app's /api/cron/produce endpoint plans + enqueues the day's episodes; the
+# running worker then drains the queue. Auth is via the x-cron-secret header.
+#
+# Required repository secrets:
+#   TOONFACTORY_APP_BASE_URL  → e.g. https://toonfactory.example.com
+#   TOONFACTORY_CRON_SECRET   → must match CRON_SECRET on the deployed app
+on:
+  schedule:
+    - cron: "0 8 * * *"
+    - cron: "0 18 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger production run
+        env:
+          APP_BASE_URL: ${{ secrets.TOONFACTORY_APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.TOONFACTORY_CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_BASE_URL:-}" ]; then
+            echo "::notice::TOONFACTORY_APP_BASE_URL not set; skipping (configure secrets to enable)."
+            exit 0
+          fi
+          echo "Triggering production at ${APP_BASE_URL}/api/cron/produce"
+          http_code=$(curl -sS -o /tmp/produce.out -w "%{http_code}" \
+            -X POST "${APP_BASE_URL}/api/cron/produce" \
+            -H "x-cron-secret: ${CRON_SECRET}" \
+            -H "content-type: application/json" \
+            -d '{}')
+          echo "Response (${http_code}):"; cat /tmp/produce.out; echo
+          if [ "${http_code}" -lt 200 ] || [ "${http_code}" -ge 300 ]; then
+            echo "::error::Production endpoint returned HTTP ${http_code}"
+            exit 1
+          fi
