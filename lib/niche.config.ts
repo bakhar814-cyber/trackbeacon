@@ -12,32 +12,32 @@ export const niche = {
   brand: "TrackBeacon",
 
   /** The thing you track, lowercase singular, e.g. "sneaker", "card", "GPU". */
-  item: "drop",
+  item: "sneaker",
   /** Plural for headings. */
-  items: "drops",
+  items: "sneakers",
 
   /** Used across landing + SEO. Keep it concrete. */
-  nicheName: "your niche",
+  nicheName: "hyped sneakers",
 
   /** Landing hero. */
   hero: {
-    headline: "Never miss a drop again",
-    sub: "We watch the listings you care about and alert you the second a price drops, a restock lands, or a new listing appears — so you're first, not last.",
+    headline: "Never miss a sneaker drop again",
+    sub: "We watch the sneakers you want and ping you the second they restock, drop in price, or relist — so you cop at retail instead of paying resale.",
     cta: "Start tracking free",
   },
 
   /** Three benefit bullets on the landing page. */
   benefits: [
-    "Instant alerts by email the moment something changes — no more refreshing 20 tabs.",
-    "A live, always-current directory of every item we track, with full price history.",
-    "Free to start. Upgrade only when you want more trackers and faster checks.",
+    "Instant email alerts the moment a pair restocks or drops in price — stop refreshing SNKRS and 20 retailer tabs.",
+    "A live directory of every sneaker we track, with full price history so you can tell a real deal from the hype.",
+    "Free to start. Upgrade for more trackers, hourly checks, and instant alerts when seconds decide who cops.",
   ],
 
   /** SEO defaults. */
   seo: {
-    title: "TrackBeacon — restock & price-drop alerts",
+    title: "TrackBeacon — sneaker restock & price-drop alerts",
     description:
-      "Get instant alerts when prices drop or items restock. Live price history and an always-current directory.",
+      "Get instant alerts when sneakers restock or drop in price. Live price history and an always-current directory of hyped releases — cop at retail, not resale.",
   },
 
   /** Affiliate tag appended to outbound buy links (optional). */
