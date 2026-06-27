@@ -1,5 +1,15 @@
 # One product URL per line. Lines starting with # are ignored.
-# Replace these with real product pages from the sources you'll track.
-# Tip: pick pages that ship schema.org Product JSON-LD (most e-commerce does).
-# https://example-store.com/products/some-item
-# https://example-store.com/products/another-item
+# Sneaker product pages confirmed to expose schema.org Product + price (Shopify boutiques).
+
+https://www.shopholyground.com/products/jordan-1-retro-chicago-2039
+https://www.shopholyground.com/products/jordan-4-retro-white-cement-2112
+https://www.shopholyground.com/products/jordan-11-retro-concord-2061
+https://undefeated.com/products/nike-air-presto-speedyellow-black-universityred-white
+https://undefeated.com/products/nike-air-max-95-metallic-silver-black
+https://www.kickgame.com/products/air-jordan-1-retro-high-og-hyper-royal-555088-402
+https://two18.com/collections/jordan-shoes/products/air-jordan-1-low-se-white-black-white-metallic-silver
+https://two18.com/collections/jordan-shoes/products/wmns-air-jordan-og-white-metallic-silver-black
+https://www.socialstatuspgh.com/collections/sneakers/products/mens-new-balance-1890
+https://www.socialstatuspgh.com/collections/sneakers/products/nike-shox-bb4
+https://www.socialstatuspgh.com/collections/sneakers/products/air-jordan-5-retro-black-multi-gs
+https://www.onenessboutique.com/products/nike-air-max-goadome-low-sp-in-taupe-iu5915-200-university-red-black
