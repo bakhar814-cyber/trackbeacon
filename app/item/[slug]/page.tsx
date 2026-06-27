@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { PriceChart } from "@/components/PriceChart";
 import { TrackButton } from "@/components/TrackButton";
 import { formatPrice, timeAgo } from "@/lib/format";
+import { buyUrl } from "@/lib/affiliate";
 import { niche } from "@/lib/niche.config";
 import type { Item, PricePoint } from "@/lib/types";
 
@@ -115,9 +116,9 @@ export default async function ItemPage({ params }: { params: { slug: string } })
             <TrackButton itemId={item.id} tracked={tracked} />
             {item.product_url && (
               <a
-                href={item.product_url}
+                href={buyUrl(item.product_url)}
                 target="_blank"
-                rel="nofollow noopener"
+                rel="nofollow sponsored noopener"
                 className="rounded-xl border border-white/20 px-4 py-2 font-medium text-slate-200 transition hover:bg-white/10"
               >
                 View listing ↗

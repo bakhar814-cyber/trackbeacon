@@ -4,6 +4,7 @@ import { scrapeUrl, detectChanges } from "@/lib/scraper";
 import { sendAlertEmail } from "@/lib/alerts/email";
 import { emailHtml, subjectFor } from "@/lib/alerts/format";
 import { PLANS } from "@/lib/plans";
+import { buyUrl } from "@/lib/affiliate";
 import type { Item } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -109,7 +110,7 @@ async function fanOutAlerts(
 
     for (const change of changes) {
       if (!t.notify_on.includes(change.type)) continue;
-      const buyUrl = item.product_url ?? "#";
+      const buy = buyUrl(item.product_url);
       const ok = await sendAlertEmail({
         to: email,
         subject: subjectFor(change.type, item.title),
@@ -119,7 +120,7 @@ async function fanOutAlerts(
           imageUrl: scraped.image_url ?? item.image_url,
           oldValue: change.oldValue,
           newValue: change.newValue,
-          buyUrl,
+          buyUrl: buy,
           currency: item.currency,
         }),
       });

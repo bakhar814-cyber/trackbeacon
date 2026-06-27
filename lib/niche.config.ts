@@ -40,8 +40,18 @@ export const niche = {
       "Get instant alerts when sneakers restock or drop in price. Live price history and an always-current directory of hyped releases — cop at retail, not resale.",
   },
 
-  /** Affiliate tag appended to outbound buy links (optional). */
+  /** Affiliate query-param tag appended to buy links, e.g. "tag=yourid-20" (optional). */
   affiliateTag: "" as string,
+
+  /**
+   * Affiliate deep-link template (preferred). After you join an affiliate program
+   * or network, paste your link format here with {url} where the product URL goes:
+   *   Sovrn:     "https://redirect.viglink.com/?key=YOURKEY&u={url}"
+   *   Skimlinks: "https://go.skimresources.com/?id=YOURID&xs=1&url={url}"
+   *   Impact:    "https://yourbrand.sjv.io/c/XXXX/YYYY/ZZZZ?u={url}"
+   * Leave "" to link directly (no commission).
+   */
+  affiliateLinkTemplate: "" as string,
 } as const;
 
 export type Niche = typeof niche;
