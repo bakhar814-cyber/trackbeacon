@@ -1,0 +1,34 @@
+# Dependencies & build artifacts (reinstalled / rebuilt inside the image)
+node_modules
+.next
+out
+dist
+build
+
+# Local data & generated media
+storage
+*.log
+npm-debug.log*
+
+# Env & secrets (provided via env_file / runtime, never baked into the image)
+.env
+.env.*
+!.env.example
+
+# VCS & tooling
+.git
+.gitignore
+.github
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
+
+# Docs & meta (not needed at runtime)
+docs
+README.md
+*.md
+Dockerfile
+docker-compose.yml
+.dockerignore
