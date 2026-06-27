@@ -3,6 +3,7 @@
 import { config } from "@/lib/config";
 import { usdToMicro } from "@/lib/cost";
 import { putObject, hashKey } from "@/lib/storage";
+import { fetchRetry } from "@/lib/providers/http";
 import type {
   ProviderResult,
   VoiceProvider,
@@ -37,7 +38,7 @@ export class ElevenLabsVoiceProvider implements VoiceProvider {
     const apiKey = config.keys.elevenlabs;
     if (!apiKey) throw new Error("ElevenLabsVoiceProvider: ELEVENLABS_API_KEY is not set");
 
-    const res = await fetch(
+    const res = await fetchRetry(
       `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(req.voiceId)}`,
       {
         method: "POST",

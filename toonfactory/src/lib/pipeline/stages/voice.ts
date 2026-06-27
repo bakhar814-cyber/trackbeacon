@@ -1,4 +1,5 @@
 import { prisma } from "../../db";
+import { config } from "../../config";
 import { getVoiceProvider } from "../../providers/registry";
 import { withAssetCache } from "../../providers/cache";
 import { hashKey } from "../../storage";
@@ -22,13 +23,18 @@ export async function runVoice(ctx: StageContext): Promise<Record<string, unknow
   const characters = await prisma.character.findMany({
     where: { seriesId: episode.seriesId },
   });
+  // A character's mapped voice id is used only if it's a real provider id; the
+  // seed's "voice-…" placeholders fall back to the configured default voice so
+  // live mode works before you've mapped each character to a real voice.
+  const DEFAULT_VOICE = config.keys.elevenlabsDefaultVoice;
+  const realId = (v?: string) => (v && !v.startsWith("voice-") ? v : DEFAULT_VOICE);
   const voiceByName = new Map(
     characters.map((c) => [
       c.name.toLowerCase(),
-      ((c.voiceProfile as { voiceId?: string }) ?? {}).voiceId ?? `voice-${c.id.slice(0, 6)}`,
+      realId(((c.voiceProfile as { voiceId?: string }) ?? {}).voiceId),
     ]),
   );
-  const NARRATOR_VOICE = "narrator-warm";
+  const NARRATOR_VOICE = DEFAULT_VOICE;
 
   let lines = 0;
   for (const scene of episode.scenes) {
@@ -54,7 +60,7 @@ export async function runVoice(ctx: StageContext): Promise<Record<string, unknow
 
     for (const d of (scene.dialogue as unknown as SceneDialogue[]) ?? []) {
       if (!d?.line?.trim() || !d.character) continue;
-      const voiceId = voiceByName.get(d.character.toLowerCase()) ?? "voice-default";
+      const voiceId = voiceByName.get(d.character.toLowerCase()) ?? DEFAULT_VOICE;
       const { url, result } = await withAssetCache({
         kind: "VOICE",
         episodeId: ctx.episodeId,

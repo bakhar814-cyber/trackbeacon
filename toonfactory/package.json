@@ -18,6 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke:llm": "tsx scripts/smoke-llm.ts",
+    "smoke:image": "tsx scripts/smoke-image.ts",
+    "smoke:voice": "tsx scripts/smoke-voice.ts",
     "youtube:auth": "tsx scripts/youtube-auth.ts",
     "smoke:youtube": "tsx scripts/smoke-youtube.ts"
   },

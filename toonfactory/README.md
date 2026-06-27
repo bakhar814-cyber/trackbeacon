@@ -180,6 +180,19 @@ measured cost. The Anthropic provider defaults to `claude-opus-4-8`, sends
 per-model pricing to the cost ledger, omits sampling params on models that
 reject them, and retries transient 429/5xx with backoff.
 
+Verify the media providers the same way (each makes one real call and prints the
+URL + cost):
+
+```bash
+PIPELINE_MODE=live IMAGE_PROVIDER=openai OPENAI_API_KEY=sk-...     npm run smoke:image
+PIPELINE_MODE=live VOICE_PROVIDER=elevenlabs ELEVENLABS_API_KEY=... npm run smoke:voice
+```
+
+The image providers map the pipeline's 16:9 frames onto each model's accepted
+sizes (gpt-image-1 fixed sizes; Imagen `aspectRatio` + watermark-off for seeds),
+and the voice stage falls back to `ELEVENLABS_DEFAULT_VOICE_ID` until you map a
+real voice id onto each character.
+
 ### Connect your YouTube channel
 
 1. Google Cloud → enable **YouTube Data API v3**; OAuth consent screen → add scopes

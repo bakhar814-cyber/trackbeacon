@@ -43,6 +43,9 @@ export const config = {
     stability: str("STABILITY_API_KEY"),
     flux: str("FLUX_API_KEY"),
     elevenlabs: str("ELEVENLABS_API_KEY"),
+    // Default voice used for the narrator + any character without a real provider
+    // voice id mapped yet. Defaults to a public ElevenLabs voice ("Rachel").
+    elevenlabsDefaultVoice: str("ELEVENLABS_DEFAULT_VOICE_ID", "21m00Tcm4TlvDq8ikWAM"),
     googleTts: str("GOOGLE_TTS_API_KEY"),
     suno: str("SUNO_API_KEY"),
     runway: str("RUNWAY_API_KEY"),
