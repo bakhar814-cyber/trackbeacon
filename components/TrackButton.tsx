@@ -28,8 +28,9 @@ export function TrackButton({ itemId, tracked }: { itemId: string; tracked: bool
   }
 
   if (needsAuth) {
+    const next = typeof window !== "undefined" ? window.location.pathname : "/";
     return (
-      <a href="/login" className="inline-block rounded-md bg-accent px-4 py-2 font-medium text-white">
+      <a href={`/login?next=${encodeURIComponent(next)}`} className="btn-glow inline-block rounded-xl px-4 py-2 font-medium">
         Sign in to track
       </a>
     );

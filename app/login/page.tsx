@@ -31,14 +31,22 @@ export default function Login() {
     setLoading(true);
     setError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.verifyOtp({
+    let { error } = await supabase.auth.verifyOtp({
       email,
       token: code.trim(),
       type: "email",
     });
+    if (error) {
+      // brand-new signups can use the "signup" OTP type — retry once
+      const retry = await supabase.auth.verifyOtp({ email, token: code.trim(), type: "signup" });
+      error = retry.error;
+    }
     setLoading(false);
     if (error) setError(error.message);
-    else router.push("/dashboard");
+    else {
+      const next = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
+      router.push(next && next.startsWith("/") ? next : "/dashboard");
+    }
   }
 
   return (
